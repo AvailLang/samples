@@ -30,6 +30,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 import avail.plugin.AvailWorkbenchTask
+import avail.plugin.PackageAvailArtifactTask
+import org.availlang.artifact.AvailArtifactType.APPLICATION
+import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -48,6 +51,7 @@ repositories {
     mavenLocal {
         url = uri("local-plugin-repository/")
     }
+    mavenLocal()
     mavenCentral()
 }
 
@@ -71,7 +75,7 @@ dependencies {
     // The module that is the foreign function interface that provides Pojos
     // written in Java that is usable by Avail.
     implementation(project(":avail-java-ffi"))
-    implementation("org.availlang:avail-json:1.0.7")
+    implementation("org.availlang:avail-json:1.1.1")
 
     // Dependency prevents SLF4J warning from being printed
     // see: http://www.slf4j.org/codes.html#noProviders
@@ -81,7 +85,7 @@ dependencies {
     // repositories listed in the repository section
     // availLibrary("avail:example-lib:1.2.3")
     testImplementation(kotlin("test"))
-    implementation("avail:avail:+")
+    implementation("org.availlang:avail:1.6.2-SNAPSHOT")
 }
 
 avail {
@@ -102,7 +106,7 @@ avail {
         // explicitly set, the most recently released version of the standard
         // library will be used. The most recent version being used is indicated
         // by a version set to `+`.
-        stdlibVersion = "1.6.0.20220512.133335"
+        stdlibVersion = "2.0.0-1.6.1-SNAPSHOT"
     }
 
     // Specify where the main Avail roots' directory is located.
@@ -120,17 +124,6 @@ avail {
         val customHeader =
             "Copyright © 1993-2022, The Avail Foundation, LLC.\n" +
                 "All rights reserved."
-        // This specifies that this root should be package into a jar.
-        packageContext =
-            AvailLibraryPackageContext("myJar", "$buildDir/libs").apply {
-                // Add any key-value pairs to the manifest included in the jar.
-                manifestPairs["some-key"] = "some-value"
-                // An action that will happen after the jar file is created.
-                postPackageAction = {
-                    println(
-                        "Hi there, this is where the file is: ${it.absolutePath}")
-                }
-            }
         // Add a module package to this created root. Only happens if file does
         // not exist.
         modulePackage("App").apply{
@@ -173,15 +166,24 @@ avail {
 }
 
 tasks {
-    // Customize task that runs default workbench.
-    assembleAndRunWorkbench {
-        // This task is customizable in the same manner as any
-        // AvailWorkbenchTask.
+    val availArtifactCreation by creating(PackageAvailArtifactTask::class)
+    {
+        dependency("org.availlang:avail:1.6.2-SNAPSHOT")
         dependency(project.dependencies.project(":avail-java-ffi"))
+        dependency("org.slf4j:slf4j-nop:${Versions.slf4jnop}")
+        implementationTitle = "Some Kinda Title"
+        artifactName = "my-avail-artifact"
+        artifactType = APPLICATION
+        artifactDescription = "Some words about what this is."
+        jvmComponent = JvmComponent(
+            true,
+            "The avail-java-ffi stuff",
+           mapOf("avail.environment.AvailWorkbench" to "The Avail Workbench launcher"))
+        jarManifestMainClass = "avail.environment.AvailWorkbench"
+        version = "1.0.0"
+        root("avail", "${projectDir.absolutePath}/avail/my-roots/avail-stdlib.jar")
 
-        // Since our project uses a foreign function interface that must be
-        // built before we can assemble our workbench, we must require `build`
-        // to be run before this `assembleAndRunWorkbench` can be run.
+        root("my-avail-root", "${projectDir.absolutePath}/avail/my-roots/my-avail-root")
         dependsOn(build)
     }
 
