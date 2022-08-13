@@ -29,7 +29,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+// The Avail Gradle Plugin heavily leverages "org.availlang:artifact"
+import avail.plugin.CreateAvailArtifactJar
 import org.availlang.artifact.AvailArtifactType.APPLICATION
+import org.availlang.artifact.AvailArtifactType.LIBRARY
 import org.availlang.artifact.PackageType.JAR
 import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
@@ -40,6 +44,8 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
 plugins {
     kotlin("jvm") version Versions.kotlin
+
+    // Import the Avail Plugin into the build script
     id("avail.avail-plugin") version Versions.availGradle
 }
 
@@ -90,6 +96,7 @@ dependencies {
 // This block configures an AvailExtension instance that is used by the Avail
 // Gradle plugin for configuring the Avail application.
 avail {
+    // A description for this Avail project.
     projectDescription = "This description goes into the Avail manifest in the jar!"
 
     // This imports the Avail Standard Library from a Maven repository,
@@ -184,6 +191,10 @@ avail {
         // writing on JAR files were supported for packaging.
         packageType = JAR
 
+        // The base name to give to the created artifact. This defaults to the
+        // project name.
+        artifactName = project.name
+
         // The version that is set for the artifact. This is set to the
         // project's version by default.
         version = project.version.toString()
@@ -208,6 +219,29 @@ avail {
         // The location to place the artifact. The value shown is the default
         // location.
         outputDirectory = "${project.buildDir}/libs/"
+
+        // The MessageDigest algorithm to use to create the digests for all the
+        // Avail roots' contents. This must be a valid algorithm accessible from
+        // `java.security.MessageDigest.getInstance`.
+        artifactDigestAlgorithm = "SHA-256"
+
+        // Add a file to the artifact
+//        addFile(File("a/file/somewhere.txt"), "target/dir/in/artifact")
+
+        // Add a JAR file (`JarFile`) to the artifact
+//        addJar(myJarFile)
+
+        // Add a zip file (`ZipFile`) to the artifact
+//        addZipFile(myZipFile)
+
+        // Add directory to the artifact
+//        addDirectory(File("some/directory"))
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency("org.availlang:avail-json:1.1.1")
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency(project.dependencies.create(":avail-java-ffi"))
     }
 }
 
@@ -217,11 +251,81 @@ val availExtension get() = project.extensions
     .findByType(avail.plugin.AvailExtension::class.java)!!
 
 tasks {
-
     jar {
         doLast {
+            // This re-creates the JAR, deleting the present JAR first. This
+            // is done due to the publishing sanity check introduced in Gradle
+            // 6.3 that does an internal check to confirm that the jar was
+            // effectively constructed by the standard JAR task in some
+            // predetermined internal order. This problem manifests with this
+            // error message:
+            // `Artifact <TARGET JAR>.jar wasn't produced by this build.`
+            // At the time of writing this was the only solution identified so
+            // far that overcame the issue.
             availExtension.createArtifact()
         }
+    }
+
+    // This is the task that uses the configuration done in the AvailExtension
+    // block, `avail {}`, to construct the artifact JAR. It is not necessary to
+    // add this to the tasks, it is only here to demonstrate its existence for
+    // completeness.
+    availArtifactJar
+
+    // This demonstrates the use of CreateAvailArtifactJar task to create a task
+    // that constructs a custom Avail artifact.
+    @Suppress("UNUSED_VARIABLE")
+    val myCustomArtifactJar by creating(CreateAvailArtifactJar::class.java)
+    {
+        // The version to give to the created artifact
+        // ([Attributes.Name.IMPLEMENTATION_VERSION]). This is a required field.
+        version.set("1.2.3")
+
+        // The base name of the artifact. This is a required field.
+        artifactName.set("my-custom-artifact")
+
+        // The AvailArtifactType; either LIBRARY or APPLICATION. The default
+        // is APPLICATION.
+        artifactType = LIBRARY
+
+        // The JvmComponent that describes the JVM contents of the artifact or
+        // JvmComponent.NONE if no JVM components. JvmComponent.NONE is the
+        // default.
+        jvmComponent = JvmComponent.NONE
+
+        // The description of the Avail artifact added to the artifacts
+        // AvailArtifactManifest.
+        artifactDescription = "A description of the Avail artifact " +
+            "constructed by this custom task."
+
+        // The [Attributes.Name.IMPLEMENTATION_TITLE inside the JAR file
+        // MANIFEST.MF. This defaults to Project.name
+        implementationTitle = "Avail Sample Hybrid Application"
+
+        // Add an AvailRoot to this custom Avail artifact. Note that the added
+        // root MUST be present in the AvailExtension (avail {}) configuration
+        // added with either:
+        //	 * AvailExtension.includeAvailLibDependency
+        //	 * AvailExtension.includeStdAvailLibDependency
+        addRoot("my-avail-root")
+
+        // Add a file to the artifact
+//        addFile(File("a/file/somewhere.txt"), "target/dir/in/artifact")
+
+        // Add a JAR file (`JarFile`) to the artifact
+//        addJar(myJarFile)
+
+        // Add a zip file (`ZipFile`) to the artifact
+//        addZipFile(myZipFile)
+
+        // Add directory to the artifact
+//        addDirectory(File("some/directory"))
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency("org.availlang:avail-json:1.1.1")
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency(project.dependencies.create(":avail-java-ffi"))
     }
 
     withType<KotlinCompile>() {
