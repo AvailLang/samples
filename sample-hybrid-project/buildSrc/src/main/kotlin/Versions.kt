@@ -60,6 +60,11 @@ object Versions
 	const val avail = "1.6.1.rc2-SNAPSHOT"
 
 	/**
+	 * The avail-gradle plugin version.
+	 */
+	const val availGradle = "2.0.0.rc1-SNAPSHOT"
+
+	/**
 	 * The SLF4J No-Op package used to prevent SLF4J warning from being printed.
 	 *
 	 * See: [http://www.slf4j.org/codes.html#noProviders]

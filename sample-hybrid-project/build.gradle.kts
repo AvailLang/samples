@@ -29,9 +29,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-import avail.plugin.AvailWorkbenchTask
-import avail.plugin.PackageAvailArtifactTask
 import org.availlang.artifact.AvailArtifactType.APPLICATION
+import org.availlang.artifact.PackageType.JAR
 import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.withType
@@ -41,7 +40,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
 plugins {
     kotlin("jvm") version Versions.kotlin
-    id("avail.avail-plugin") version Versions.avail
+    id("avail.avail-plugin") version Versions.availGradle
 }
 
 group = "org.availlang.sample"
@@ -88,26 +87,35 @@ dependencies {
     implementation("org.availlang:avail:1.6.2-SNAPSHOT")
 }
 
+// This block configures an AvailExtension instance that is used by the Avail
+// Gradle plugin for configuring the Avail application.
 avail {
-//    this.availVersion = "1.6.0.20220512.133335"
-    useStdAvailLib {
+    projectDescription = "This description goes into the Avail manifest in the jar!"
+
+    // This imports the Avail Standard Library from a Maven repository,
+    // presumably Maven Central where the library is officially published.
+    includeStdAvailLibDependency {
         // The name of the root for the standard library actually defaults to
         // "avail", so it is not necessary to include this line.
         name = "avail"
 
-        // The base name the `avail-stdlib` jar file that should be named
-        // without the `.jar` extension. This will be used to construct the
-        // [AvailRoot.uri]. Not setting this will default jar name to be the
-        // jar as it is retrieved from maven:
-        //    `avail-stdlib-<AVAIL BUILD VERSION>.jar
-        jarLibBaseName = "avail-stdlib"
+        // The dependency artifact group. This defaults to "org.availlang", so
+        // it is not necessary to include this line.
+        group = "org.availlang"
 
-        // OPTIONAL: The specific Avail Standard Library version. If not
-        // explicitly set, the most recently released version of the standard
-        // library will be used. The most recent version being used is indicated
-        // by a version set to `+`.
-        stdlibVersion = "2.0.0-1.6.1-SNAPSHOT"
+        // The dependency artifact name. This defaults to "avail-stdlib", so it
+        // is not necessary to include this line.
+        artifactName = "avail-stdlib"
+
+        // OPTIONAL: The specific dependency version of the published  Avail
+        // Standard Library. If not explicitly set, the most recently released
+        // version of the standard library will be used. The most recent version
+        // being used is indicated by a version set to `+`.
+        version = "2.0.0-1.6.1-SNAPSHOT"
     }
+
+    // Adds an Avail library from a dependency from
+    // includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
 
     // Specify where the main Avail roots' directory is located.
     rootsDirectory = "$projectDir/avail/my-roots"
@@ -163,54 +171,57 @@ avail {
             moduleHeaderCommentBody = customHeader
         }
     }
-}
 
-tasks {
-    val availArtifactCreation by creating(PackageAvailArtifactTask::class)
-    {
-        dependency("org.availlang:avail:1.6.2-SNAPSHOT")
-        dependency(project.dependencies.project(":avail-java-ffi"))
-        dependency("org.slf4j:slf4j-nop:${Versions.slf4jnop}")
-        implementationTitle = "Some Kinda Title"
-        artifactName = "my-avail-artifact"
+    // This represents a PackageAvailArtifact. It is used to configure the
+    // creation of an Avail artifact.
+    artifact {
+        // The AvailArtifactType; either LIBRARY or APPLICATION. The default
+        // is APPLICATION.
         artifactType = APPLICATION
-        artifactDescription = "Some words about what this is."
+
+        // The PackageType that indicates how the Avail artifact is to be
+        // packaged. Packaging as a JAR is the default setting. At time of
+        // writing on JAR files were supported for packaging.
+        packageType = JAR
+
+        // The version that is set for the artifact. This is set to the
+        // project's version by default.
+        version = project.version.toString()
+
+        // The [Attributes.Name.IMPLEMENTATION_TITLE inside the JAR file
+        // MANIFEST.MF.
+        implementationTitle = "Avail Sample Hybrid Application"
+
+        // The [Attributes.Name.MAIN_CLASS] for the manifest or an empty string
+        // if no main class set. This should be the primary main class for
+        // starting the application.
+        jarManifestMainClass = "org.availlang.sample.AppKt"
+
+        // The JvmComponent that describes the JVM contents of the artifact or
+        // JvmComponent.NONE if no JVM components. JvmComponent.NONE is the
+        // default.
         jvmComponent = JvmComponent(
             true,
-            "The avail-java-ffi stuff",
-           mapOf("avail.environment.AvailWorkbench" to "The Avail Workbench launcher"))
-        jarManifestMainClass = "avail.environment.AvailWorkbench"
-        version = "1.0.0"
-        root("avail", "${projectDir.absolutePath}/avail/my-roots/avail-stdlib.jar")
+            "It's got java bits!",
+            mapOf("org.availlang.sample.AppKt" to "It runs the app!"))
 
-        root("my-avail-root", "${projectDir.absolutePath}/avail/my-roots/my-avail-root")
-        dependsOn(build)
+        // The location to place the artifact. The value shown is the default
+        // location.
+        outputDirectory = "${project.buildDir}/libs/"
     }
+}
 
-    // Add your own custom task to assemble and launch an Avail workbench.
-    val myWorkbenchTask by creating(AvailWorkbenchTask::class.java)
-    {
-        group = "My Tasks"
-        description = "My custom workbench build."
-        dependsOn(jar)
-        workbenchJarBaseName = "myCustomWorkbench"
-        rebuildWorkbenchJar = true
-        maximumJavaHeap = "6g"
-        dependsOn(jar)
-        // Can specify a directly accessible jar
-        workbenchLocalJarDependency("$buildDir/libs/sample-project.jar")
+// A helper getter to obtain the AvailExtension object configured in the
+// `avail {}` block above.
+val availExtension get() = project.extensions
+    .findByType(avail.plugin.AvailExtension::class.java)!!
 
-        // Dependency prevents SLF4J warning from being printed
-        // see: http://www.slf4j.org/codes.html#noProviders
-//        dependency("org.slf4j:slf4j-nop:${Versions.slf4jnop}")
-        dependency(project.dependencies.project(":avail-java-ffi"))
-        root("my-avail-root", "$projectDir/avail/my-roots/my-avail-root")
-        root(
-            "avail",
-            "jar:$projectDir/avail/my-roots/avail-stdlib.jar")
-        vmOption("-ea")
-        vmOption("-XX:+UseCompressedOops")
-        vmOption("-DavailDeveloper=true")
+tasks {
+
+    jar {
+        doLast {
+            availExtension.createArtifact()
+        }
     }
 
     withType<KotlinCompile>() {
