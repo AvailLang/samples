@@ -35,6 +35,11 @@ import avail.plugin.CreateAvailArtifactJar
 import org.availlang.artifact.AvailArtifactType.APPLICATION
 import org.availlang.artifact.AvailArtifactType.LIBRARY
 import org.availlang.artifact.PackageType.JAR
+import org.availlang.artifact.environment.location.AvailLocation
+import org.availlang.artifact.environment.location.AvailLocation.LocationType.availRepositories
+import org.availlang.artifact.environment.location.ProjectHome
+import org.availlang.artifact.environment.location.Scheme.FILE
+import org.availlang.artifact.environment.project.AvailProject.Companion.ROOTS_DIR
 import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.withType
@@ -124,8 +129,24 @@ avail {
     // Adds an Avail library from a dependency from
     // includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
 
-    // Specify where to write the .repo files to.
-    repositoryDirectory = "$projectDir/my-repos"
+    // Specify where to write the .repo files to. This defaults to the Avail
+    // home repos, directory in the user's home directory:
+    // <user-home/.avail/repositories
+    repositoryDirectory =
+        ProjectHome(
+            "my-repos",
+            FILE,
+            projectDir.absolutePath,
+            availRepositories)
+
+    // The AvailLocation directory where the project's Avail roots exist, not
+    // imported libraries. By default this is in AvailProject.ROOTS_DIR at the
+    // top level of the project which is the value currently set here.
+    rootsDirectory = ProjectHome(
+        ROOTS_DIR,
+        FILE,
+        project.projectDir.absolutePath,
+        AvailLocation.LocationType.projectRoots)
 
     // Point to a file that contains the file header comment body to be used
     // by all generated modules.
