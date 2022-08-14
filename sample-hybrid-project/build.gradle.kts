@@ -50,7 +50,7 @@ plugins {
 }
 
 group = "org.availlang.sample"
-version = "1.0"
+version = "1.0.0"
 
 repositories {
     mavenLocal {
@@ -90,7 +90,7 @@ dependencies {
     // repositories listed in the repository section
     // availLibrary("avail:example-lib:1.2.3")
     testImplementation(kotlin("test"))
-    implementation("org.availlang:avail:1.6.2-SNAPSHOT")
+    implementation("org.availlang:avail:2.0.0-SNAPSHOT")
 }
 
 // This block configures an AvailExtension instance that is used by the Avail
@@ -124,14 +124,14 @@ avail {
     // Adds an Avail library from a dependency from
     // includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
 
-    // Specify where the main Avail roots' directory is located.
-    rootsDirectory = "$projectDir/avail/my-roots"
     // Specify where to write the .repo files to.
-    repositoryDirectory = "$projectDir/avail/my-repos"
+    repositoryDirectory = "$projectDir/my-repos"
 
     // Point to a file that contains the file header comment body to be used
     // by all generated modules.
     moduleHeaderCommentBodyFile = "$projectDir/copyright.txt"
+
+    root("other-root")
 
     // Add this new root to the roots directory and create it. Will only create
     // files in this root that do not already exist.
@@ -148,7 +148,7 @@ avail {
             extends = listOf("Avail", "Configurations", "Network")
             // Add a module to this module package.
             addModule("Configurations").apply {
-                // Specify module header for this module..
+                // Specify module header for this module.
                 versions = listOf("Avail-1.6.0")
                 // The modules to list in the uses section in the Avail header.
                 uses = listOf("Avail")
@@ -240,8 +240,9 @@ avail {
         // Add a dependency to the artifact that will be resolved by this task
         dependency("org.availlang:avail-json:1.1.1")
 
-        // Add a dependency to the artifact that will be resolved by this task
-        dependency(project.dependencies.create(":avail-java-ffi"))
+        // Add a module dependency to the artifact that will be resolved by this
+        // task
+        dependency(project.dependencies.create(project(":avail-java-ffi")))
     }
 }
 
@@ -270,13 +271,18 @@ tasks {
     // block, `avail {}`, to construct the artifact JAR. It is not necessary to
     // add this to the tasks, it is only here to demonstrate its existence for
     // completeness.
-    availArtifactJar
+    availArtifactJar {
+
+    }
 
     // This demonstrates the use of CreateAvailArtifactJar task to create a task
     // that constructs a custom Avail artifact.
     @Suppress("UNUSED_VARIABLE")
     val myCustomArtifactJar by creating(CreateAvailArtifactJar::class.java)
     {
+        // Ensure project is built before creating jar.
+        dependsOn(build)
+
         // The version to give to the created artifact
         // ([Attributes.Name.IMPLEMENTATION_VERSION]). This is a required field.
         version.set("1.2.3")
@@ -324,8 +330,9 @@ tasks {
         // Add a dependency to the artifact that will be resolved by this task
         dependency("org.availlang:avail-json:1.1.1")
 
-        // Add a dependency to the artifact that will be resolved by this task
-        dependency(project.dependencies.create(":avail-java-ffi"))
+        // Add a module dependency to the artifact that will be resolved by this
+        // task
+        dependency(project.dependencies.create(project(":avail-java-ffi")))
     }
 
     withType<KotlinCompile>() {
