@@ -35,6 +35,7 @@ import avail.plugin.CreateAvailArtifactJar
 import org.availlang.artifact.AvailArtifactType.APPLICATION
 import org.availlang.artifact.AvailArtifactType.LIBRARY
 import org.availlang.artifact.PackageType.JAR
+import org.availlang.artifact.environment.location.AvailRepositories
 import org.availlang.artifact.environment.location.ProjectHome
 import org.availlang.artifact.environment.location.Scheme.FILE
 import org.availlang.artifact.environment.project.AvailProject
@@ -126,16 +127,13 @@ avail {
     }
 
     // Adds an Avail library from a dependency from
-    // includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
+//     includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
 
-    // Specify where to write the .repo files to. This defaults to the Avail
-    // home repos, directory in the user's home directory:
-    // <user-home>/.avail/repositories
-    repositoryDirectory =
-        ProjectHome(
-            "my-repos",
-            FILE,
-            projectDir.absolutePath)
+
+    // Specify the AvailLocation where to write the .repo files to. This
+    // defaults to the Avail home repos, AvailRepositories, directory in the
+    // user's home directory: <user-home>/.avail/repositories
+    repositoryDirectory = AvailRepositories()
 
     // The AvailLocation directory where the project's Avail roots exist, not
     // imported libraries. By default this is in AvailProject.ROOTS_DIR at the

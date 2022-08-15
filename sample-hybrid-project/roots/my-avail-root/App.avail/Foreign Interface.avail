@@ -80,6 +80,5 @@ Method "wrap_and print" is
 	value : Java int
 |
 	wrapped ::= wrap value;
-	Print: format "XThe wrapped value: “①”" with wrapped's value;
+	Print: format "The wrapped value: “①”" with wrapped's value;
 ];
-
