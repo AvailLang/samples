@@ -1,16 +1,16 @@
 {
-	"id": "ac4703e1-ab40-452d-b6d7-7a64ddd4d0fc", 
+	"id": "9da18828-38aa-44e7-a872-d2cad1043d5a", 
 	"darkMode": true, 
 	"serializationVersion": 1, 
 	"name": "sample-hybrid-project", 
 	"repositoryLocation": {
-		"locationType": "availRepositories", 
+		"locationType": "project", 
 		"scheme": "FILE", 
 		"path": "my-repos"
 	}, 
 	"roots": [
 		{
-			"id": "89e1798b-85b3-49a1-8440-e754117ebb7a", 
+			"id": "f4aa12b7-c058-4ea8-bfe8-09f922dae1c0", 
 			"name": "avail", 
 			"editable": false, 
 			"location": 
@@ -21,23 +21,23 @@
 			}, 
 			"availModuleExtensions": ["avail"]
 		},{
-			"id": "25c0c41f-1993-4343-b615-19e88313c8ed", 
+			"id": "426b806a-bfb7-4d00-80cd-882e1c97455d", 
 			"name": "my-avail-root", 
 			"editable": true, 
 			"location": {
-				"locationType": "projectRoots", 
+				"locationType": "project", 
 				"scheme": "FILE", 
-				"path": "my-avail-root"
+				"path": "roots/my-avail-root"
 			}, 
 			"availModuleExtensions": ["avail"]
 		},{
-			"id": "dbe37cd1-7cb2-40ae-842b-f6d1c251c45c", 
+			"id": "2c6fae5c-bbb1-469a-9a84-605b6ce96049", 
 			"name": "other-root", 
 			"editable": true, 
 			"location": {
-				"locationType": "projectRoots", 
+				"locationType": "project", 
 				"scheme": "FILE", 
-				"path": "other-root"
+				"path": "roots/other-root"
 			}, 
 			"availModuleExtensions": ["avail"]
 		}]

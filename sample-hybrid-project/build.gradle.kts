@@ -35,8 +35,6 @@ import avail.plugin.CreateAvailArtifactJar
 import org.availlang.artifact.AvailArtifactType.APPLICATION
 import org.availlang.artifact.AvailArtifactType.LIBRARY
 import org.availlang.artifact.PackageType.JAR
-import org.availlang.artifact.environment.location.AvailLocation
-import org.availlang.artifact.environment.location.AvailLocation.LocationType.availRepositories
 import org.availlang.artifact.environment.location.ProjectHome
 import org.availlang.artifact.environment.location.Scheme.FILE
 import org.availlang.artifact.environment.project.AvailProject.Companion.ROOTS_DIR
@@ -131,13 +129,12 @@ avail {
 
     // Specify where to write the .repo files to. This defaults to the Avail
     // home repos, directory in the user's home directory:
-    // <user-home/.avail/repositories
+    // <user-home>/.avail/repositories
     repositoryDirectory =
         ProjectHome(
             "my-repos",
             FILE,
-            projectDir.absolutePath,
-            availRepositories)
+            projectDir.absolutePath)
 
     // The AvailLocation directory where the project's Avail roots exist, not
     // imported libraries. By default this is in AvailProject.ROOTS_DIR at the
@@ -145,18 +142,17 @@ avail {
     rootsDirectory = ProjectHome(
         ROOTS_DIR,
         FILE,
-        project.projectDir.absolutePath,
-        AvailLocation.LocationType.projectRoots)
+        project.projectDir.absolutePath)
 
     // Point to a file that contains the file header comment body to be used
     // by all generated modules.
     moduleHeaderCommentBodyFile = "$projectDir/copyright.txt"
 
-    root("other-root")
+    projectRoot("other-root")
 
     // Add this new root to the roots directory and create it. Will only create
     // files in this root that do not already exist.
-    createRoot("my-avail-root").apply{
+    createProjectRoot("my-avail-root").apply{
         val customHeader =
             "Copyright © 1993-2022, The Avail Foundation, LLC.\n" +
                 "All rights reserved."
