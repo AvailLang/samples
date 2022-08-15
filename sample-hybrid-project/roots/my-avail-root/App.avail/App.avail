@@ -37,5 +37,6 @@ Versions
 Extends
 	"Avail",
 	"Configurations",
+	"Foreign Interface",
 	"Network"
 Body

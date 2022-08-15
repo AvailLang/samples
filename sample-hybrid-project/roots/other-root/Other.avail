@@ -1,10 +1,10 @@
 /*
- * Scripts.avail
+ * Other.avail
  * Copyright © 1993-2022, The Avail Foundation, LLC.
  * All rights reserved.
  */
 
-Module "Scripts"
+Module "Other"
 Versions
 	"Avail-1.6.0"
 Uses

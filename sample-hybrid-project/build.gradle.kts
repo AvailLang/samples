@@ -37,6 +37,7 @@ import org.availlang.artifact.AvailArtifactType.LIBRARY
 import org.availlang.artifact.PackageType.JAR
 import org.availlang.artifact.environment.location.ProjectHome
 import org.availlang.artifact.environment.location.Scheme.FILE
+import org.availlang.artifact.environment.project.AvailProject
 import org.availlang.artifact.environment.project.AvailProject.Companion.ROOTS_DIR
 import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
@@ -282,6 +283,25 @@ tasks {
             // far that overcame the issue.
             availExtension.createArtifact()
         }
+    }
+
+    // This task creates the Avail Project file, `avail-config.json` as
+    // configured in the AvailExtension block, `avail {}`.
+    createProjectFile {
+        // Set name of the file. This defaults to AvailProject.CONFIG_FILE_NAME
+        // which is `avail-config.json`.
+        fileName = AvailProject.CONFIG_FILE_NAME
+
+        // Set the directory where the Avail project file will be written to.
+        // This location is the Avail Project Home directory for the Avail
+        // project. The project roots directory is expected to be relative to
+        // this directory.
+        // The default location is at the top level of the project as shown
+        // here.
+        outputLocation = ProjectHome(
+            "",
+            FILE,
+            project.projectDir.absolutePath)
     }
 
     // This is the task that uses the configuration done in the AvailExtension
