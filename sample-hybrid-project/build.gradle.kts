@@ -29,7 +29,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-import avail.plugin.AvailWorkbenchTask
+
+// The Avail Gradle Plugin heavily leverages "org.availlang:artifact"
+import avail.plugin.CreateAvailArtifactJar
+import org.availlang.artifact.AvailArtifactType.APPLICATION
+import org.availlang.artifact.AvailArtifactType.LIBRARY
+import org.availlang.artifact.PackageType.JAR
+import org.availlang.artifact.environment.location.AvailRepositories
+import org.availlang.artifact.environment.location.ProjectHome
+import org.availlang.artifact.environment.location.Scheme.FILE
+import org.availlang.artifact.environment.project.AvailProject
+import org.availlang.artifact.environment.project.AvailProject.Companion.ROOTS_DIR
+import org.availlang.artifact.jar.JvmComponent
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -38,16 +49,19 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent.*
 
 plugins {
     kotlin("jvm") version Versions.kotlin
-    id("avail.avail-plugin") version Versions.avail
+
+    // Import the Avail Plugin into the build script
+    id("avail.avail-plugin") version Versions.availGradle
 }
 
 group = "org.availlang.sample"
-version = "1.0"
+version = "1.0.0"
 
 repositories {
     mavenLocal {
         url = uri("local-plugin-repository/")
     }
+    mavenLocal()
     mavenCentral()
 }
 
@@ -71,7 +85,7 @@ dependencies {
     // The module that is the foreign function interface that provides Pojos
     // written in Java that is usable by Avail.
     implementation(project(":avail-java-ffi"))
-    implementation("org.availlang:avail-json:1.0.7")
+    implementation("org.availlang:avail-json:1.1.1")
 
     // Dependency prevents SLF4J warning from being printed
     // see: http://www.slf4j.org/codes.html#noProviders
@@ -81,56 +95,66 @@ dependencies {
     // repositories listed in the repository section
     // availLibrary("avail:example-lib:1.2.3")
     testImplementation(kotlin("test"))
-    implementation("avail:avail:+")
+    implementation("org.availlang:avail:2.0.0-SNAPSHOT")
 }
 
+// This block configures an AvailExtension instance that is used by the Avail
+// Gradle plugin for configuring the Avail application.
 avail {
-//    this.availVersion = "1.6.0.20220512.133335"
-    useStdAvailLib {
+    // A description for this Avail project.
+    projectDescription = "This description goes into the Avail manifest in the jar!"
+
+    // This imports the Avail Standard Library from a Maven repository,
+    // presumably Maven Central where the library is officially published.
+    includeStdAvailLibDependency {
         // The name of the root for the standard library actually defaults to
         // "avail", so it is not necessary to include this line.
         name = "avail"
 
-        // The base name the `avail-stdlib` jar file that should be named
-        // without the `.jar` extension. This will be used to construct the
-        // [AvailRoot.uri]. Not setting this will default jar name to be the
-        // jar as it is retrieved from maven:
-        //    `avail-stdlib-<AVAIL BUILD VERSION>.jar
-        jarLibBaseName = "avail-stdlib"
+        // The dependency artifact group. This defaults to "org.availlang", so
+        // it is not necessary to include this line.
+        group = "org.availlang"
 
-        // OPTIONAL: The specific Avail Standard Library version. If not
-        // explicitly set, the most recently released version of the standard
-        // library will be used. The most recent version being used is indicated
-        // by a version set to `+`.
-        stdlibVersion = "1.6.0.20220512.133335"
+        // The dependency artifact name. This defaults to "avail-stdlib", so it
+        // is not necessary to include this line.
+        artifactName = "avail-stdlib"
+
+        // OPTIONAL: The specific dependency version of the published  Avail
+        // Standard Library. If not explicitly set, the most recently released
+        // version of the standard library will be used. The most recent version
+        // being used is indicated by a version set to `+`.
+        version = "2.0.0-1.6.1-SNAPSHOT"
     }
 
-    // Specify where the main Avail roots' directory is located.
-    rootsDirectory = "$projectDir/avail/my-roots"
-    // Specify where to write the .repo files to.
-    repositoryDirectory = "$projectDir/avail/my-repos"
+    // Adds an Avail library from a dependency from
+//     includeAvailLibDependency("sample", "org.mystuff:alib:1.0.0")
+
+
+    // Specify the AvailLocation where to write the .repo files to. This
+    // defaults to the Avail home repos, AvailRepositories, directory in the
+    // user's home directory: <user-home>/.avail/repositories
+    repositoryDirectory = AvailRepositories()
+
+    // The AvailLocation directory where the project's Avail roots exist, not
+    // imported libraries. By default this is in AvailProject.ROOTS_DIR at the
+    // top level of the project which is the value currently set here.
+    rootsDirectory = ProjectHome(
+        ROOTS_DIR,
+        FILE,
+        project.projectDir.absolutePath)
 
     // Point to a file that contains the file header comment body to be used
     // by all generated modules.
     moduleHeaderCommentBodyFile = "$projectDir/copyright.txt"
 
+    projectRoot("other-root")
+
     // Add this new root to the roots directory and create it. Will only create
     // files in this root that do not already exist.
-    createRoot("my-avail-root").apply{
+    createProjectRoot("my-avail-root").apply{
         val customHeader =
             "Copyright © 1993-2022, The Avail Foundation, LLC.\n" +
                 "All rights reserved."
-        // This specifies that this root should be package into a jar.
-        packageContext =
-            AvailLibraryPackageContext("myJar", "$buildDir/libs").apply {
-                // Add any key-value pairs to the manifest included in the jar.
-                manifestPairs["some-key"] = "some-value"
-                // An action that will happen after the jar file is created.
-                postPackageAction = {
-                    println(
-                        "Hi there, this is where the file is: ${it.absolutePath}")
-                }
-            }
         // Add a module package to this created root. Only happens if file does
         // not exist.
         modulePackage("App").apply{
@@ -140,7 +164,7 @@ avail {
             extends = listOf("Avail", "Configurations", "Network")
             // Add a module to this module package.
             addModule("Configurations").apply {
-                // Specify module header for this module..
+                // Specify module header for this module.
                 versions = listOf("Avail-1.6.0")
                 // The modules to list in the uses section in the Avail header.
                 uses = listOf("Avail")
@@ -170,45 +194,180 @@ avail {
             moduleHeaderCommentBody = customHeader
         }
     }
+
+    // This represents a PackageAvailArtifact. It is used to configure the
+    // creation of an Avail artifact.
+    artifact {
+        // The AvailArtifactType; either LIBRARY or APPLICATION. The default
+        // is APPLICATION.
+        artifactType = APPLICATION
+
+        // The PackageType that indicates how the Avail artifact is to be
+        // packaged. Packaging as a JAR is the default setting. At time of
+        // writing on JAR files were supported for packaging.
+        packageType = JAR
+
+        // The base name to give to the created artifact. This defaults to the
+        // project name.
+        artifactName = project.name
+
+        // The version that is set for the artifact. This is set to the
+        // project's version by default.
+        version = project.version.toString()
+
+        // The [Attributes.Name.IMPLEMENTATION_TITLE inside the JAR file
+        // MANIFEST.MF.
+        implementationTitle = "Avail Sample Hybrid Application"
+
+        // The [Attributes.Name.MAIN_CLASS] for the manifest or an empty string
+        // if no main class set. This should be the primary main class for
+        // starting the application.
+        jarManifestMainClass = "org.availlang.sample.AppKt"
+
+        // The JvmComponent that describes the JVM contents of the artifact or
+        // JvmComponent.NONE if no JVM components. JvmComponent.NONE is the
+        // default.
+        jvmComponent = JvmComponent(
+            true,
+            "It's got java bits!",
+            mapOf("org.availlang.sample.AppKt" to "It runs the app!"))
+
+        // The location to place the artifact. The value shown is the default
+        // location.
+        outputDirectory = "${project.buildDir}/libs/"
+
+        // The MessageDigest algorithm to use to create the digests for all the
+        // Avail roots' contents. This must be a valid algorithm accessible from
+        // `java.security.MessageDigest.getInstance`.
+        artifactDigestAlgorithm = "SHA-256"
+
+        // Add a file to the artifact
+//        addFile(File("a/file/somewhere.txt"), "target/dir/in/artifact")
+
+        // Add a JAR file (`JarFile`) to the artifact
+//        addJar(myJarFile)
+
+        // Add a zip file (`ZipFile`) to the artifact
+//        addZipFile(myZipFile)
+
+        // Add directory to the artifact
+//        addDirectory(File("some/directory"))
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency("org.availlang:avail-json:1.1.1")
+
+        // Add a module dependency to the artifact that will be resolved by this
+        // task
+        dependency(project.dependencies.create(project(":avail-java-ffi")))
+    }
 }
 
-tasks {
-    // Customize task that runs default workbench.
-    assembleAndRunWorkbench {
-        // This task is customizable in the same manner as any
-        // AvailWorkbenchTask.
-        dependency(project.dependencies.project(":avail-java-ffi"))
+// A helper getter to obtain the AvailExtension object configured in the
+// `avail {}` block above.
+val availExtension get() = project.extensions
+    .findByType(avail.plugin.AvailExtension::class.java)!!
 
-        // Since our project uses a foreign function interface that must be
-        // built before we can assemble our workbench, we must require `build`
-        // to be run before this `assembleAndRunWorkbench` can be run.
-        dependsOn(build)
+tasks {
+    jar {
+        doLast {
+            // This re-creates the JAR, deleting the present JAR first. This
+            // is done due to the publishing sanity check introduced in Gradle
+            // 6.3 that does an internal check to confirm that the jar was
+            // effectively constructed by the standard JAR task in some
+            // predetermined internal order. This problem manifests with this
+            // error message:
+            // `Artifact <TARGET JAR>.jar wasn't produced by this build.`
+            // At the time of writing this was the only solution identified so
+            // far that overcame the issue.
+            availExtension.createArtifact()
+        }
     }
 
-    // Add your own custom task to assemble and launch an Avail workbench.
-    val myWorkbenchTask by creating(AvailWorkbenchTask::class.java)
-    {
-        group = "My Tasks"
-        description = "My custom workbench build."
-        dependsOn(jar)
-        workbenchJarBaseName = "myCustomWorkbench"
-        rebuildWorkbenchJar = true
-        maximumJavaHeap = "6g"
-        dependsOn(jar)
-        // Can specify a directly accessible jar
-        workbenchLocalJarDependency("$buildDir/libs/sample-project.jar")
+    // This task creates the Avail Project file, `avail-config.json` as
+    // configured in the AvailExtension block, `avail {}`.
+    createProjectFile {
+        // Set name of the file. This defaults to AvailProject.CONFIG_FILE_NAME
+        // which is `avail-config.json`.
+        fileName = AvailProject.CONFIG_FILE_NAME
 
-        // Dependency prevents SLF4J warning from being printed
-        // see: http://www.slf4j.org/codes.html#noProviders
-//        dependency("org.slf4j:slf4j-nop:${Versions.slf4jnop}")
-        dependency(project.dependencies.project(":avail-java-ffi"))
-        root("my-avail-root", "$projectDir/avail/my-roots/my-avail-root")
-        root(
-            "avail",
-            "jar:$projectDir/avail/my-roots/avail-stdlib.jar")
-        vmOption("-ea")
-        vmOption("-XX:+UseCompressedOops")
-        vmOption("-DavailDeveloper=true")
+        // Set the directory where the Avail project file will be written to.
+        // This location is the Avail Project Home directory for the Avail
+        // project. The project roots directory is expected to be relative to
+        // this directory.
+        // The default location is at the top level of the project as shown
+        // here.
+        outputLocation = ProjectHome(
+            "",
+            FILE,
+            project.projectDir.absolutePath)
+    }
+
+    // This is the task that uses the configuration done in the AvailExtension
+    // block, `avail {}`, to construct the artifact JAR. It is not necessary to
+    // add this to the tasks, it is only here to demonstrate its existence for
+    // completeness.
+    availArtifactJar {
+
+    }
+
+    // This demonstrates the use of CreateAvailArtifactJar task to create a task
+    // that constructs a custom Avail artifact.
+    @Suppress("UNUSED_VARIABLE")
+    val myCustomArtifactJar by creating(CreateAvailArtifactJar::class.java)
+    {
+        // Ensure project is built before creating jar.
+        dependsOn(build)
+
+        // The version to give to the created artifact
+        // ([Attributes.Name.IMPLEMENTATION_VERSION]). This is a required field.
+        version.set("1.2.3")
+
+        // The base name of the artifact. This is a required field.
+        artifactName.set("my-custom-artifact")
+
+        // The AvailArtifactType; either LIBRARY or APPLICATION. The default
+        // is APPLICATION.
+        artifactType = LIBRARY
+
+        // The JvmComponent that describes the JVM contents of the artifact or
+        // JvmComponent.NONE if no JVM components. JvmComponent.NONE is the
+        // default.
+        jvmComponent = JvmComponent.NONE
+
+        // The description of the Avail artifact added to the artifacts
+        // AvailArtifactManifest.
+        artifactDescription = "A description of the Avail artifact " +
+            "constructed by this custom task."
+
+        // The [Attributes.Name.IMPLEMENTATION_TITLE inside the JAR file
+        // MANIFEST.MF. This defaults to Project.name
+        implementationTitle = "Avail Sample Hybrid Application"
+
+        // Add an AvailRoot to this custom Avail artifact. Note that the added
+        // root MUST be present in the AvailExtension (avail {}) configuration
+        // added with either:
+        //	 * AvailExtension.includeAvailLibDependency
+        //	 * AvailExtension.includeStdAvailLibDependency
+        addRoot("my-avail-root")
+
+        // Add a file to the artifact
+//        addFile(File("a/file/somewhere.txt"), "target/dir/in/artifact")
+
+        // Add a JAR file (`JarFile`) to the artifact
+//        addJar(myJarFile)
+
+        // Add a zip file (`ZipFile`) to the artifact
+//        addZipFile(myZipFile)
+
+        // Add directory to the artifact
+//        addDirectory(File("some/directory"))
+
+        // Add a dependency to the artifact that will be resolved by this task
+        dependency("org.availlang:avail-json:1.1.1")
+
+        // Add a module dependency to the artifact that will be resolved by this
+        // task
+        dependency(project.dependencies.create(project(":avail-java-ffi")))
     }
 
     withType<KotlinCompile>() {
