@@ -51,7 +51,7 @@ plugins {
     kotlin("jvm") version Versions.kotlin
 
     // Import the Avail Plugin into the build script
-    id("avail.avail-plugin") version Versions.availGradle
+    id("org.availlang.avail-plugin") version Versions.availGradle
 }
 
 group = "org.availlang.sample"
@@ -76,8 +76,7 @@ java {
 
 kotlin {
     jvmToolchain {
-        (this as JavaToolchainSpec).languageVersion.set(
-            JavaLanguageVersion.of(Versions.jvmTarget))
+        languageVersion.set(JavaLanguageVersion.of(Versions.jvmTarget))
     }
 }
 
@@ -123,7 +122,7 @@ avail {
         // Standard Library. If not explicitly set, the most recently released
         // version of the standard library will be used. The most recent version
         // being used is indicated by a version set to `+`.
-        version = "2.0.0-1.6.1-SNAPSHOT"
+        version = "2.0.0-1.6.1.alpha01"
     }
 
     // Adds an Avail library from a dependency from

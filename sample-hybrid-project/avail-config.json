@@ -17,7 +17,7 @@
 			{
 				"locationType": "availLibraries", 
 				"scheme": "JAR", 
-				"path": "org/availlang/avail-stdlib-2.0.0-1.6.1-SNAPSHOT.jar"
+				"path": "org/availlang/avail-stdlib-2.0.0-1.6.1.alpha01.jar"
 			}, 
 			"availModuleExtensions": ["avail"]
 		},{
