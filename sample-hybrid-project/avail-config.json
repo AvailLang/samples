@@ -1,5 +1,5 @@
 {
-	"id": "c11ca7ce-bf71-4aa7-9403-5c87e51a7cbf", 
+	"id": "56d53510-262a-43bb-a4ac-ed6d56caef96", 
 	"darkMode": true, 
 	"serializationVersion": 1, 
 	"name": "sample-hybrid-project", 
@@ -10,35 +10,43 @@
 	}, 
 	"roots": [
 		{
-			"id": "05a04e42-48f7-4e07-aef8-db72f1561e1d", 
+			"id": "d1f5f732-7dd0-457b-bf35-71a28b843eb5", 
 			"name": "avail", 
 			"editable": false, 
+			"visible": true, 
 			"location": 
 			{
 				"locationType": "availLibraries", 
 				"scheme": "JAR", 
-				"path": "org/availlang/avail-stdlib-2.0.0-1.6.1.alpha01.jar"
+				"path": "org/availlang/avail-stdlib-2.0.0.alpha09-1.6.1.alpha04.jar", 
+				"rootNameInJar": "avail"
 			}, 
-			"availModuleExtensions": ["avail"]
+			"availModuleExtensions": ["avail"], 
+			"rootCopyright": ""
 		},{
-			"id": "a6313be3-596c-4511-9498-dfe25de0f1a4", 
+			"id": "6d4df992-0348-40f1-8d8f-6f6900ca0b35", 
 			"name": "my-avail-root", 
 			"editable": true, 
+			"visible": true, 
 			"location": {
 				"locationType": "project", 
 				"scheme": "FILE", 
 				"path": "roots/my-avail-root"
 			}, 
-			"availModuleExtensions": ["avail"]
+			"availModuleExtensions": ["avail"], 
+			"rootCopyright": ""
 		},{
-			"id": "9419e9a8-2387-4202-a479-4b4301d39c98", 
+			"id": "8a9fdb3b-087a-44fc-b3d6-ae1557e327ba", 
 			"name": "other-root", 
 			"editable": true, 
+			"visible": true, 
 			"location": {
 				"locationType": "project", 
 				"scheme": "FILE", 
 				"path": "roots/other-root"
 			}, 
-			"availModuleExtensions": ["avail"]
-		}]
+			"availModuleExtensions": ["avail"], 
+			"rootCopyright": ""
+		}], 
+	"projectCopyright": ""
 }

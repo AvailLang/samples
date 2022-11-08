@@ -57,12 +57,12 @@ object Versions
 	 *
 	 *  This represents the version of the `avail-plugin`.
 	 */
-	const val avail = "2.0.0.alpha01"
+	const val avail = "2.0.0.alpha13"
 
 	/**
 	 * The avail-gradle plugin version.
 	 */
-	const val availGradle = "2.0.0.alpha01"
+	const val availGradle = "2.0.0.alpha14"
 
 	/**
 	 * The SLF4J No-Op package used to prevent SLF4J warning from being printed.
