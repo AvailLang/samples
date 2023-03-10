@@ -8,3 +8,4 @@ build
 /debug
 hs_err_*.log
 **/*.repo
+*-local-state.json

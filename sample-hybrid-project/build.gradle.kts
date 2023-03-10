@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// The Avail Gradle Plugin heavily leverages "org.availlang:artifact"
+ //The Avail Gradle Plugin heavily leverages "org.availlang:artifact"
 import avail.plugin.CreateAvailArtifactJar
 import org.availlang.artifact.AvailArtifactType.APPLICATION
 import org.availlang.artifact.AvailArtifactType.LIBRARY
@@ -51,7 +51,7 @@ plugins {
     kotlin("jvm") version Versions.kotlin
 
     // Import the Avail Plugin into the build script
-    id("avail.avail-plugin") version Versions.availGradle
+    id("org.availlang.avail-plugin") version Versions.availGradle
 }
 
 group = "org.availlang.sample"
@@ -76,8 +76,7 @@ java {
 
 kotlin {
     jvmToolchain {
-        (this as JavaToolchainSpec).languageVersion.set(
-            JavaLanguageVersion.of(Versions.jvmTarget))
+//        languageVersion.set(JavaLanguageVersion.of(Versions.jvmTarget))
     }
 }
 
@@ -85,7 +84,7 @@ dependencies {
     // The module that is the foreign function interface that provides Pojos
     // written in Java that is usable by Avail.
     implementation(project(":avail-java-ffi"))
-    implementation("org.availlang:avail-json:1.1.1")
+//    implementation("org.availlang:avail-json:1.2.0")
 
     // Dependency prevents SLF4J warning from being printed
     // see: http://www.slf4j.org/codes.html#noProviders
@@ -95,7 +94,7 @@ dependencies {
     // repositories listed in the repository section
     // availLibrary("avail:example-lib:1.2.3")
     testImplementation(kotlin("test"))
-    implementation("org.availlang:avail:2.0.0-SNAPSHOT")
+    implementation("org.availlang:avail:2.0.0.alpha14")
 }
 
 // This block configures an AvailExtension instance that is used by the Avail
@@ -123,7 +122,7 @@ avail {
         // Standard Library. If not explicitly set, the most recently released
         // version of the standard library will be used. The most recent version
         // being used is indicated by a version set to `+`.
-        version = "2.0.0-1.6.1-SNAPSHOT"
+        version = "2.0.0.alpha09-1.6.1.alpha04"
     }
 
     // Adds an Avail library from a dependency from
@@ -133,7 +132,7 @@ avail {
     // Specify the AvailLocation where to write the .repo files to. This
     // defaults to the Avail home repos, AvailRepositories, directory in the
     // user's home directory: <user-home>/.avail/repositories
-    repositoryDirectory = AvailRepositories()
+    repositoryDirectory = AvailRepositories(rootNameInJar = null)
 
     // The AvailLocation directory where the project's Avail roots exist, not
     // imported libraries. By default this is in AvailProject.ROOTS_DIR at the
@@ -141,7 +140,8 @@ avail {
     rootsDirectory = ProjectHome(
         ROOTS_DIR,
         FILE,
-        project.projectDir.absolutePath)
+        project.projectDir.absolutePath,
+        null)
 
     // Point to a file that contains the file header comment body to be used
     // by all generated modules.
@@ -254,7 +254,7 @@ avail {
 //        addDirectory(File("some/directory"))
 
         // Add a dependency to the artifact that will be resolved by this task
-        dependency("org.availlang:avail-json:1.1.1")
+        dependency("org.availlang:avail-json:1.2.0")
 
         // Add a module dependency to the artifact that will be resolved by this
         // task
@@ -299,13 +299,14 @@ tasks {
         outputLocation = ProjectHome(
             "",
             FILE,
-            project.projectDir.absolutePath)
+            project.projectDir.absolutePath,
+            null)
     }
 
-    // This is the task that uses the configuration done in the AvailExtension
-    // block, `avail {}`, to construct the artifact JAR. It is not necessary to
-    // add this to the tasks, it is only here to demonstrate its existence for
-    // completeness.
+//     This is the task that uses the configuration done in the AvailExtension
+//     block, `avail {}`, to construct the artifact JAR. It is not necessary to
+//     add this to the tasks, it is only here to demonstrate its existence for
+//     completeness.
     availArtifactJar {
 
     }
@@ -363,7 +364,7 @@ tasks {
 //        addDirectory(File("some/directory"))
 
         // Add a dependency to the artifact that will be resolved by this task
-        dependency("org.availlang:avail-json:1.1.1")
+        dependency("org.availlang:avail-json:1.2.0")
 
         // Add a module dependency to the artifact that will be resolved by this
         // task

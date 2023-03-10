@@ -135,9 +135,12 @@ class App
  * 	2. [Project.moduleRootsPath]
  *
  * If these aren't provided the app will exit.
+ *
+ * TODO this must be updated to work with the new Avail Project format.
  */
 fun main(args: Array<String>)
 {
+
 	// Check of Project configuration provided.
 	if (args.isEmpty())
 	{

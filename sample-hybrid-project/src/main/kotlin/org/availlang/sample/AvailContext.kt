@@ -74,7 +74,6 @@ data class Project constructor(
 			renamesFileBody = renamesFileBody,
 			fileManager = fileManager)
 	}
-
 	/** The [AvailBuilder] used to build Avail [Modules][ModuleDescriptor]. */
 	val builder: AvailBuilder by lazy {
 		AvailBuilder(runtime)

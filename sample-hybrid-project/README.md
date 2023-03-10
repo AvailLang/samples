@@ -1,5 +1,9 @@
 SAMPLE PROJECT OVERVIEW
 --------------------------------------------------------------------------------
+***NOTE: This uses alpha version tools that are in flux. This README will be***
+***updated to reflect accurate usage for the 2.0.0 production release of the***
+***Avail toolchain***.
+
 This represents a project that uses Avail in a JVM project. This project will be
 updated over time to reflect changes to Avail as well as to further 
 demonstrate how Avail can be used in a JVM project.
@@ -10,10 +14,10 @@ The sample project uses Gradle to set up the project environment. It
 utilizes the `buildSrc` directory for managing state used in `build.gradle.
 kts`.
 
-It uses the [Avail Plugin](/avail-plugin/README.md) to set up Avail:
+It uses the [Avail Plugin](https://github.com/AvailLang/gradle-plugin/tree/development) to set up Avail:
 
 ```kotlin
- id("avail.avail-plugin") version Versions.availStripeVersion
+id("org.availlang.avail-plugin") version Versions.availGradle
 ```
 
 The directory `avail/` is created by the Avail Gradle task, `initializeAvail` 
@@ -47,7 +51,7 @@ it creates an `AvailRuntime` based upon the Avail Plugin `avail` project
 configuration. It then compiles a targeted Avail Module in the created 
 Avail Root, `my-avail-root`.
  * `App.kt` - The `main` application file. This represents the core running 
-   application.
+   application. TODO THIS NEEDS TO BE UPDATED TO USE new Avail Projects
  * `AvailContext` - This contains functionality used to create your Avail 
    `Project`. The `Project` gives you access to an `AvailRuntime` and also 
    allows you to build a module. 
