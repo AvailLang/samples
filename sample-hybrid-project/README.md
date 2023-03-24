@@ -1,7 +1,7 @@
 SAMPLE PROJECT OVERVIEW
 --------------------------------------------------------------------------------
 
-![Version](https://img.shields.io/badge/maven--central-v2.0.0.alpha01-0f824e)
+![Version](https://img.shields.io/badge/v2.0.0.alpha01-0f824e)
 
 ***NOTE: This uses alpha version tools that are in flux. This README will be***
 ***updated to reflect accurate usage for the 2.0.0 production release of the***
