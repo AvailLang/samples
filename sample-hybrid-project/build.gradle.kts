@@ -52,10 +52,13 @@ plugins {
 
     // Import the Avail Plugin into the build script
     id("org.availlang.avail-plugin") version Versions.availGradle
+
+    // Used to create a runnable Uber Jar
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "org.availlang.sample"
-version = "1.0.0"
+version = "2.0.0.alpha01"
 
 repositories {
     mavenLocal {
@@ -84,17 +87,15 @@ dependencies {
     // The module that is the foreign function interface that provides Pojos
     // written in Java that is usable by Avail.
     implementation(project(":avail-java-ffi"))
-//    implementation("org.availlang:avail-json:1.2.0")
 
     // Dependency prevents SLF4J warning from being printed
     // see: http://www.slf4j.org/codes.html#noProviders
-//    implementation("org.slf4j:slf4j-nop:${Versions.slf4jnop}")
 
     // Can add an Avail library dependency as a jar available in one of the
     // repositories listed in the repository section
-    // availLibrary("avail:example-lib:1.2.3")
+    implementation("org.availlang:avail:2.0.0.alpha21")
+
     testImplementation(kotlin("test"))
-    implementation("org.availlang:avail:2.0.0.alpha14")
 }
 
 // This block configures an AvailExtension instance that is used by the Avail
@@ -122,7 +123,7 @@ avail {
         // Standard Library. If not explicitly set, the most recently released
         // version of the standard library will be used. The most recent version
         // being used is indicated by a version set to `+`.
-        version = "2.0.0.alpha09-1.6.1.alpha04"
+        version = "2.0.0.alpha21-1.6.1.alpha10"
     }
 
     // Adds an Avail library from a dependency from
@@ -135,7 +136,7 @@ avail {
     repositoryDirectory = AvailRepositories(rootNameInJar = null)
 
     // The AvailLocation directory where the project's Avail roots exist, not
-    // imported libraries. By default this is in AvailProject.ROOTS_DIR at the
+    // imported libraries. By default, this is in AvailProject.ROOTS_DIR at the
     // top level of the project which is the value currently set here.
     rootsDirectory = ProjectHome(
         ROOTS_DIR,
@@ -380,8 +381,15 @@ tasks {
         targetCompatibility = jvmTargetString
     }
     jar {
+        manifest.attributes["Main-Class"] = "avail.project.AvailProjectWorkbenchRunner"
         archiveVersion.set("")
     }
+
+    shadowJar {
+        archiveVersion.set("")
+        destinationDirectory.set(file("./"))
+    }
+
     test {
         useJUnit()
         val toolChains =
